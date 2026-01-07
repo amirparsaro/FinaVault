@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.hashers import make_password, check_password
 from django.utils import timezone
+from currency.models import Currency
 
 class Status(models.IntegerChoices):
     ACTIVE = 1, "Active"
@@ -32,5 +33,5 @@ class Account(models.Model):
     modified_at = models.DateTimeField(auto_now=True)
     status = models.IntegerField(choices=Status.choices, default=Status.ACTIVE)
 
-    # currency = models.OneToOneField(Currency, on_delete=models.CASCADE)
+    currency = models.OneToOneField(Currency, on_delete=models.CASCADE, null=True) # delete nullability later
     user = models.ForeignKey(User, on_delete=models.CASCADE)
