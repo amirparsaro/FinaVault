@@ -8,4 +8,4 @@ class Currency(models.Model):
     symbol = models.CharField(max_length=10, unique=True)
     exchange_rate = models.FloatField()
 
-    base_currency = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE)
+    base_currency = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL)

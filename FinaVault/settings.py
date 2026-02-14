@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'currency.apps.CurrencyConfig',
     'logs.apps.LogsConfig',
     'wallets.apps.WalletsConfig',
+    'transactions.apps.TransactionsConfig',
 ]
 
 MIDDLEWARE = [
