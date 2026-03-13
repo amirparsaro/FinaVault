@@ -1,5 +1,9 @@
+import uuid
+from datetime import timedelta
+
 from django.db import models
 from django.contrib.auth.hashers import make_password, check_password
+from django.utils import timezone
 
 from accounts.exceptions import InvalidPasswordCreationException
 from currency.models import Currency
@@ -8,10 +12,13 @@ class Status(models.IntegerChoices):
     ACTIVE = 1, "Active"
     INACTIVE = 0, "Inactive"
 
+def default_expiry():
+    return timezone.now() + timedelta(days=7)
+
 # Create your models here.
 class User(models.Model):
     id = models.AutoField(primary_key=True)
-    username = models.CharField(max_length=128) # TODO: Unique = True!!!
+    username = models.CharField(max_length=128, unique=True)
     password = models.CharField(max_length=128)
     email = models.EmailField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -26,3 +33,11 @@ class User(models.Model):
 
     def check_password(self, raw_password):
         return check_password(raw_password, self.password)
+
+class AuthToken(models.Model):
+    id = models.AutoField(primary_key=True)
+    token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(default=default_expiry)
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)

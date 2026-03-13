@@ -40,7 +40,7 @@ def delete_user(user_id: int):
 def sign_up(username: str, password: str, email: str): # throws InvalidPasswordCreation
     create_user(username, password, email)
 
-def login(username: str, password: str): # throws UserDoesNotExist
+def log_in(username: str, password: str): # throws UserDoesNotExist
     try:
         user = User.objects.get(username=username)
     except User.DoesNotExist:
@@ -51,4 +51,4 @@ def login(username: str, password: str): # throws UserDoesNotExist
 
     return user
 
-# TODO: Add Auth Table to Database
+# TODO: Add Auth to login and signup
