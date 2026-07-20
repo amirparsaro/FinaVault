@@ -1,32 +1,55 @@
-from accounts.exceptions import UserDoesNotExistException
-from accounts.models import User
+from django.contrib.auth import get_user_model, authenticate, login, logout
+from django.utils import timezone
+from accounts.exceptions import *
 
-# PRIMARY
+User = get_user_model()
+
 def create_user(username: str, password: str, email: str):
-    user = User(username=username, email=email)
-    user.set_password(password)
-    user.save()
-    return user
+    if User.objects.filter(username=username).exists():
+        raise UserAlreadyExistsException("This username already exists")
 
-def update_user(user_id: int, new_user: User): # TODO: password must have a different way
+    if User.objects.filter(email=email).exists():
+        raise UserAlreadyExistsException("This email already exists")
+
+    return User.objects.create_user(
+        username=username,
+        email=email,
+        password=password,
+    )
+
+def update_user(user_id: int, new_user: User):
     try:
         user = User.objects.get(id=user_id)
     except User.DoesNotExist:
         raise UserDoesNotExistException("No users found with such id")
 
-    user.username = new_user.username
-    user.email = new_user.email
-    user.password = new_user.password
+    if user.username is not None:
+        try:
+            User.objects.get(username=new_user.username)
+        except User.DoesNotExist:
+            user.username = new_user.username
+
+        raise UserAlreadyExistsException("This username already exists")
+
+    if user.email is not None:
+        try:
+            User.objects.get(email=new_user.email)
+        except User.DoesNotExist:
+            user.email = new_user.email
+
+        raise EmailAlreadyExistsException("This email already exists")
+
+    if new_user.password:
+        user.set_password(new_user.password)
+
     user.save()
     return user
 
 def read_user(user_id: int):
     try:
-        user = User.objects.get(id=user_id)
+        return User.objects.get(id=user_id)
     except User.DoesNotExist:
         raise UserDoesNotExistException("No users found with such id")
-
-    return user
 
 def delete_user(user_id: int):
     try:
@@ -36,19 +59,17 @@ def delete_user(user_id: int):
 
     user.delete()
 
-# SECONDARY
-def sign_up(username: str, password: str, email: str): # throws InvalidPasswordCreation
-    create_user(username, password, email)
+def register_user(username: str, password: str, email:str):
+    return create_user(username=username, password=password, email=email)
 
-def log_in(username: str, password: str): # throws UserDoesNotExist
-    try:
-        user = User.objects.get(username=username)
-    except User.DoesNotExist:
-        raise UserDoesNotExistException("No users found with such username")
+def login_user(request, username: str, password: str):
+    user = authenticate(request, username, password)
 
-    if not user.check_password(password):
-        raise UserDoesNotExistException("No users found with such password")
+    if user is None:
+        raise InvalidCredentialsException("Invalid username or password")
 
+    login(request, user)
     return user
 
-# TODO: Add Auth to login and signup
+def logout_user(request):
+    logout(request) # In Views, return error code 401 (unauthorized)

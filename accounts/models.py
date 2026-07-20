@@ -1,6 +1,7 @@
 import uuid
 from datetime import timedelta
 
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.contrib.auth.hashers import make_password, check_password
 from django.utils import timezone
@@ -12,32 +13,9 @@ class Status(models.IntegerChoices):
     ACTIVE = 1, "Active"
     INACTIVE = 0, "Inactive"
 
-def default_expiry():
-    return timezone.now() + timedelta(days=7)
-
 # Create your models here.
-class User(models.Model):
-    id = models.AutoField(primary_key=True)
-    username = models.CharField(max_length=128, unique=True)
-    password = models.CharField(max_length=128)
-    email = models.EmailField()
+class User(AbstractUser):
+    email = models.EmailField(unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
     status = models.IntegerField(choices=Status.choices, default=Status.ACTIVE)
-
-    def set_password(self, raw_password: str):
-        if len(raw_password) < 8:
-            raise InvalidPasswordCreationException("Password must be at least 8 characters long.")
-
-        self.password = make_password(raw_password)
-
-    def check_password(self, raw_password):
-        return check_password(raw_password, self.password)
-
-class AuthToken(models.Model):
-    id = models.AutoField(primary_key=True)
-    token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    expires_at = models.DateTimeField(default=default_expiry)
-
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
